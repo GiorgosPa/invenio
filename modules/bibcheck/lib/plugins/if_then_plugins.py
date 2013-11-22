@@ -17,21 +17,17 @@
 ## along with Invenio; if not, write to the Free Software Foundation, Inc.,
 ## 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 
-""" Bibcheck plugin to enforce mandatory fields """
+""" Bibcheck plugin helper functions called by if-then plugin"""
+from invenio.bibrecord import *
 
-def check_record(record, fields, sets_of_fields=[]):
-    """
-    Mark record as invalid if it doesn't contain all the specified fields
-    or if it doesn't contain at least one field of the specified fieldset
-    """
-    for field in fields:
-        if len(list(record.iterfield(field))) == 0:
-            record.set_invalid("Missing mandatory field %s" % field)
-	for set_of_fields in sets_of_fields:
-		found = False
-		for field in set_of_fields:
-			if len(list(record.iterfield(field))) != 0:
-				found = True
-				break
-		if not found:
-			record.set_invalid("Missing all fields from mandatory set of fields %s" % ' or '.join(set_of_fields))
+def core_in_65017(record,*args):
+	values = record_get_field_values(record,'650','1','7','a')
+	for value in values:
+		if value in ['Experiment-HEP', 'Lattice', 'Phenomenology-HEP', 'Theory-HEP']:
+			return True
+	return False
+
+def core_should_exist(record):
+	values = record_get_field_values(record,'980','_','_','a')
+	if not 'CORE' in values:
+		record.set_invalid("980__a field with value CORE should be added")

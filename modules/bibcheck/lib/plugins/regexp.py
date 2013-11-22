@@ -26,9 +26,9 @@ def check_record(record, regexps):
     Checks the record against a set of regular expressions.
     @param regexps: A dict {field: regexp}
     """
-    for field, regexp in regexps.items():
+    for field, regexp, description in regexps.items():
         for position, value in record.iterfield(field):
             if not re.match(regexp, value):
-                record.set_invalid("Field %s doesn't match regexp %s" %
-                        (position[0], regexp))
+                record.set_invalid("Field %s doesn't match regexp %s : %s" %
+                        (position[0], regexp, description))
 
