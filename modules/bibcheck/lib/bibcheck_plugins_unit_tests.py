@@ -30,13 +30,16 @@ from invenio.bibcheck_plugins import mandatory, \
     enum, \
     dates, \
     texkey, \
-    url
+    url, \
+    remove_empty_fields
 from invenio.bibcheck_task import AmendableRecord
 
 MOCK_RECORD = {
     '001': [([], ' ', ' ', '1', 7)],
     '005': [([], ' ', ' ', '20130621172205.0', 7)],
     '100': [([('a', 'Photolab '),('c', '')], ' ', ' ', '', 7), ([('a', 'mplampla')], ' ', ' ', '', 8)], # Trailing spaces
+    '100': [([('a', 'Photolab '),('c', '')], ' ', ' ', '', 7)],
+    '245': [([('a', ''), ('b', '')], ' ', ' ', '', 7)], #remove-empty-fields
     '260': [([('c', '2000-06-14')], ' ', ' ', '', 7)],
     '261': [([('c', '14 Jun 2000')], ' ', ' ', '', 7)],
     '262': [([('c', '14 06 00')], ' ', ' ', '', 7)],
@@ -46,6 +49,7 @@ MOCK_RECORD = {
     '340': [([('a', 'FI\xc3\x28LM')], ' ', ' ', '', 7)], # Invalid utf-8
     '595': [([('a', ' Press')], ' ', ' ', '', 7)], # Leading spaces
     '653': [([('a', 'LEP')], '1', ' ', '', 7)],
+    '700': [([('a', 'Bella, Ludovica Aperio'), ('c', '')], ' ', ' ', '', 7), ([('a', 'Galtieri, Angela Barbaro')], ' ', ' ', '', 8)],#remove-empty-fields
     '856': [([('f', 'neil.calder@cern.ch')], '0', ' ', '', 7)],
     '994': [([('u', 'http://httpstat.us/200')], '4', ' ', '', 7)], # Url that works
     '995': [([('u', 'www.google.com/favicon.ico')], '4', ' ', '', 7)],  # url without protocol
@@ -64,6 +68,20 @@ RULE_MOCK = {
 class BibCheckPluginsTest(InvenioTestCase):
     """ Bibcheck default plugins test """
 
+    def assertDeletions(self, test, deletions, **kwargs):
+        """
+        Assert that the plugin "test" deletes from the mock record
+        the fields in the list 'deletions' and makes the record amended
+        when called with params kwargs.
+        """
+        record = AmendableRecord(MOCK_RECORD)
+        record.set_rule(RULE_MOCK)
+        test.check_record(record, **kwargs)
+        self.assertTrue(record.amended)
+        self.assertEqual(len(record.amendments), len(deletions))
+        for field in deletions:
+            self.assertEqual(0, len(list(record.iterfield(field))))
+
     def assertAmends(self, test, changes, **kwargs):
         """
         Assert that the plugin "test" amends the mock record when called with
@@ -77,8 +95,8 @@ class BibCheckPluginsTest(InvenioTestCase):
         for field, val in changes.iteritems():
             if val is not None:
                 self.assertEqual(
-                    [((field, 0, 0), val)],
-                    list(record.iterfield(field))
+                    ((field, 0, 0), val),
+                    list(record.iterfield(field))[0]
                 )
             else:
                 self.assertEqual(len(list(record.iterfield(field))), 1)
@@ -152,6 +170,10 @@ class BibCheckPluginsTest(InvenioTestCase):
     def test_texkey(self):
         """ TexKey plugin test """
         self.assertAmends(texkey, {"035__a": None})
+
+    def test_remove_empty_subfields(self):
+        """ remove_empty_fields plugin test """
+        self.assertDeletions(remove_empty_fields, ["700__c", '245__a', '245__b', '245%%%', "100__c"])
 
     # Test skipped by default because it involved making slow http requests
     #def test_url(self):
