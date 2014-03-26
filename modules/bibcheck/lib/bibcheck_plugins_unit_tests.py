@@ -31,14 +31,14 @@ from invenio.bibcheck_plugins import mandatory, \
     dates, \
     texkey, \
     url, \
-    remove_empty_fields
+    remove_empty_fields, \
+    code_exists
 from invenio.bibcheck_task import AmendableRecord
 
 MOCK_RECORD = {
     '001': [([], ' ', ' ', '1', 7)],
     '005': [([], ' ', ' ', '20130621172205.0', 7)],
-    '100': [([('a', 'Photolab '),('c', '')], ' ', ' ', '', 7), ([('a', 'mplampla')], ' ', ' ', '', 8)], # Trailing spaces
-    '100': [([('a', 'Photolab '),('c', '')], ' ', ' ', '', 7)],
+    '100': [([('a', 'Photolab '),('c', '')], ' ', ' ', '', 7)], # Trailing spaces
     '245': [([('a', ''), ('b', '')], ' ', ' ', '', 7)], #remove-empty-fields
     '260': [([('c', '2000-06-14')], ' ', ' ', '', 7)],
     '261': [([('c', '14 Jun 2000')], ' ', ' ', '', 7)],
@@ -166,6 +166,11 @@ class BibCheckPluginsTest(InvenioTestCase):
         self.assertFails(dates, fields=["264__c"]) # Date in the far past
         self.assertFails(dates, fields=["265__c"], allow_future=False) # Date in the future
         self.assertFails(dates, fields=["100__a"]) # Invalid date
+
+    def test_code_exists(self):
+        """ code_exists plugin test """
+        self.assertOk(code_exists, code_in_fields={'100__': 'a'})        
+        self.assertFails(code_exists, code_in_fields={'100__': 'b'})
 
     def test_texkey(self):
         """ TexKey plugin test """

@@ -19,7 +19,7 @@
 ## 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 
 from invenio.bibcheck_task import AmendableRecord
-from invenio.bibrecord import record_xml_output, record_delete_field
+from invenio.bibrecord import record_delete_field
 
 
 def check_record(record):

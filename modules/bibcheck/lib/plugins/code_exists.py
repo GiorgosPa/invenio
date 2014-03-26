@@ -18,7 +18,7 @@
 ## 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 
 """ Bibcheck plugin to enforce mandatory subfields """
-from invenio.bibrecord import *
+from invenio.bibcheck_task import AmendableRecord
 
 def check_record(record, code_in_fields):
     """
@@ -27,12 +27,10 @@ def check_record(record, code_in_fields):
     //no without
     """
     for field, code in code_in_fields.items():
-        for field_instance in record_get_field_instances(record,'100','_','_'):
-            found = False
-            subfields = field_get_subfield_instances(field_instance)
-            for subfield in subfields:
-                if subfield[0] is code and subfield[1]:
-                    found = True
-                    break
-            if not found:
-                record.set_invalid("Field %s must contain a subfield with code %s" % (field, code))
+        found = False
+        for pos, dummy in record.iterfield(field + code):
+            if pos[0][-1] == code:
+                found = True
+                break
+        if not found:
+            record.set_invalid("Field %s must contain a subfield with code %s" % (field, code))
