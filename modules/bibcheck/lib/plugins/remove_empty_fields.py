@@ -19,8 +19,7 @@
 ## 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 
 from invenio.bibcheck_task import AmendableRecord
-from invenio.bibrecord import record_delete_field
-
+from invenio.bibrecord import record_xml_output
 
 def check_record(record):
     """ Bibcheck plugin to remove empty fields from records """
@@ -32,20 +31,15 @@ def remove_empty_subfields(record):
     """ removes subfields with no value """
     for position, value in record.iterfield('%%%%%%'):
         if not value:
-            message = 'remove empty subfield: ' + position
+            message = 'remove empty subfield: ' + position[0]
             record.delete_field(position, message)
             remove_empty_subfields(record)
 
 
 def remove_empty_tags(record):
     """ removes tags with no subfields and no value """
-    tags = record.keys()
-    for position, dummy in record.iterfields(['%%%%%%', '%%%%%_']):
-        tag = position[0][:3]
-        if tag in tags:
-            tags.remove(tag)
-
-    for tag in tags:
-        record_delete_field(record, tag)
-        message = 'removed empty tag: ' + tag
-        record.set_amended(message)
+    for tag in record.keys():
+        for (local_position, field_obj) in enumerate(record[tag]):
+            if not field_obj[0] and not field_obj[3]:
+                record[tag].pop(local_position)
+                record.set_amended('removed empty tag: ' + tag)
