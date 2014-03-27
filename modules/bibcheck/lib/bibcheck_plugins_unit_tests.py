@@ -32,8 +32,10 @@ from invenio.bibcheck_plugins import mandatory, \
     texkey, \
     url, \
     remove_empty_fields, \
-    code_exists
+    code_exists, \
+    remove_duplicates
 from invenio.bibcheck_task import AmendableRecord
+from invenio.bibrecord import record_add_field
 
 MOCK_RECORD = {
     '001': [([], ' ', ' ', '1', 7)],
@@ -179,6 +181,18 @@ class BibCheckPluginsTest(InvenioTestCase):
     def test_remove_empty_subfields(self):
         """ remove_empty_fields plugin test """
         self.assertDeletions(remove_empty_fields, ["700__c", '245__a', '245__b', '245%%%', "100__c"])
+
+    def test_remove_duplicates(self):
+        """ remove_duplicates plugin test """
+        rec = {}
+        record_add_field(rec, '001', controlfield_value='111')
+        record_add_field(rec, '001', controlfield_value='111')
+        record_add_field(rec, '002', subfields=[('a','hey')])
+        record_add_field(rec, '002', subfields=[('a','hey')])
+        rec = AmendableRecord(rec)
+        rec.set_rule(RULE_MOCK)
+        remove_duplicates.check_record(rec)
+        self.assertEqual(len(rec.amendments),3)#removes 2 tags and 1 subfield
 
     # Test skipped by default because it involved making slow http requests
     #def test_url(self):
