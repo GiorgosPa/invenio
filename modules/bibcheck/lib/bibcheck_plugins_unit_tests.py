@@ -33,7 +33,8 @@ from invenio.bibcheck_plugins import mandatory, \
     url, \
     remove_empty_fields, \
     code_exists, \
-    remove_duplicates
+    remove_duplicates, \
+    journal_names
 from invenio.bibcheck_task import AmendableRecord
 from invenio.bibrecord import record_add_field
 
@@ -193,6 +194,49 @@ class BibCheckPluginsTest(InvenioTestCase):
         rec.set_rule(RULE_MOCK)
         remove_duplicates.check_record(rec)
         self.assertEqual(len(rec.amendments),3)#removes 2 tags and 1 subfield
+
+    def test_journal_names(self):
+        rec = {}
+        record_add_field(rec, '773', subfields=[('p','JHEP')])
+        record_add_field(rec, '001', controlfield_value='111')
+        record_add_field(rec, '999', ind1='C', ind2='5', subfields=[('s','JHEP,a,b')])
+        rec = AmendableRecord(rec)
+        rec.set_rule(RULE_MOCK)
+        journal_names.check_records([rec])
+        self.assertEqual(rec.valid, True)
+        rec = {}
+        record_add_field(rec, '773', subfields=[('p','JHEP2')])
+        record_add_field(rec, '001', controlfield_value='111')
+        record_add_field(rec, '999', ind1='C', ind2='5', subfields=[('s','JHEP,a,b')])
+        rec = AmendableRecord(rec)
+        rec.set_rule(RULE_MOCK)
+        journal_names.check_records([rec])
+        self.assertEqual(rec.valid, False)
+        rec = {}
+        record_add_field(rec, '773', subfields=[('p','JHEP')])
+        record_add_field(rec, '001', controlfield_value='111')
+        record_add_field(rec, '999', ind1='C', ind2='5', subfields=[('s','JHEP,a,b,c')])
+        rec = AmendableRecord(rec)
+        rec.set_rule(RULE_MOCK)
+        journal_names.check_records([rec])
+        self.assertEqual(rec.valid, False)
+        rec = {}
+        record_add_field(rec, '773', subfields=[('p','JHEP')])
+        record_add_field(rec, '001', controlfield_value='111')
+        record_add_field(rec, '999', ind1='C', ind2='5', subfields=[('s','JHEP2,a,b')])
+        rec = AmendableRecord(rec)
+        rec.set_rule(RULE_MOCK)
+        journal_names.check_records([rec])
+        self.assertEqual(rec.valid, False)
+        rec = {}
+        
+        record_add_field(rec, '773', subfields=[('p','JHEP,a,b')])
+        record_add_field(rec, '001', controlfield_value='111')
+        record_add_field(rec, '999', ind1='C', ind2='5', subfields=[('s','JHEP,a,b')])
+        rec = AmendableRecord(rec)
+        rec.set_rule(RULE_MOCK)
+        journal_names.check_records([rec])
+        self.assertEqual(rec.valid, False)
 
     # Test skipped by default because it involved making slow http requests
     #def test_url(self):

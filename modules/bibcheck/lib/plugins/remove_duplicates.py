@@ -17,7 +17,6 @@
 ## 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 
 from invenio.bibcheck_task import AmendableRecord
-from invenio.bibrecord import record_add_field, record_xml_output, record_delete_field
 from invenio.bibcheck_plugins import remove_empty_fields
 
 
@@ -28,8 +27,7 @@ def check_record(record):
         if (position[0], value) not in fields:
             fields.append((position[0], value))
         else:
-            message = 'remove duplicate subfield: %s with value: %s ' % (position, value)            
-            print message
+            message = 'remove duplicate subfield: %s with value: %s ' % (position, value)
             record.delete_field(position, message)
             tag = position[0][:3]
     if record.amended:

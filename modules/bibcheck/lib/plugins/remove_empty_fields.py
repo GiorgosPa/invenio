@@ -19,7 +19,6 @@
 ## 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 
 from invenio.bibcheck_task import AmendableRecord
-from invenio.bibrecord import record_xml_output
 
 def check_record(record):
     """ Bibcheck plugin to remove empty fields from records """
