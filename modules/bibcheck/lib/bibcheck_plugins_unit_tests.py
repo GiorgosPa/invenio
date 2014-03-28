@@ -34,39 +34,49 @@ from invenio.bibcheck_plugins import mandatory, \
     remove_empty_fields, \
     code_exists, \
     remove_duplicates, \
-    journal_names
+    journal_names, \
+    recid
 from invenio.bibcheck_task import AmendableRecord
 from invenio.bibrecord import record_add_field
 
 MOCK_RECORD = {
     '001': [([], ' ', ' ', '1', 7)],
     '005': [([], ' ', ' ', '20130621172205.0', 7)],
-    '100': [([('a', 'Photolab '),('c', '')], ' ', ' ', '', 7)], # Trailing spaces
-    '245': [([('a', ''), ('b', '')], ' ', ' ', '', 7)], #remove-empty-fields
+    '100': [([('a', 'Photolab '),
+              ('c', '')], ' ', ' ', '', 7)],  # Trailing spaces
+    '245': [([('a', ''), ('b', '')], ' ', ' ', '', 7)],  # remove-empty-fields
     '260': [([('c', '2000-06-14')], ' ', ' ', '', 7)],
     '261': [([('c', '14 Jun 2000')], ' ', ' ', '', 7)],
     '262': [([('c', '14 06 00')], ' ', ' ', '', 7)],
     '263': [([('c', '2000 06 14')], ' ', ' ', '', 7)],
     '264': [([('c', '1750 06 14')], ' ', ' ', '', 7)],
     '265': [([('c', '2100 06 14')], ' ', ' ', '', 7)],
-    '340': [([('a', 'FI\xc3\x28LM')], ' ', ' ', '', 7)], # Invalid utf-8
-    '595': [([('a', ' Press')], ' ', ' ', '', 7)], # Leading spaces
+    '340': [([('a', 'FI\xc3\x28LM')], ' ', ' ', '', 7)],  # Invalid utf-8
+    '595': [([('a', ' Press')], ' ', ' ', '', 7)],  # Leading spaces
     '653': [([('a', 'LEP')], '1', ' ', '', 7)],
-    '700': [([('a', 'Bella, Ludovica Aperio'), ('c', '')], ' ', ' ', '', 7), ([('a', 'Galtieri, Angela Barbaro')], ' ', ' ', '', 8)],#remove-empty-fields
+    '700': [([('a', 'Bella, Ludovica Aperio'),
+              ('c', '')], ' ', ' ', '', 7),
+            ([('a', 'Galtieri, Angela Barbaro')], ' ', ' ', '', 8)],  # remove-empty-fields
     '856': [([('f', 'neil.calder@cern.ch')], '0', ' ', '', 7)],
-    '994': [([('u', 'http://httpstat.us/200')], '4', ' ', '', 7)], # Url that works
+    '994': [([('u', 'http://httpstat.us/200')], '4', ' ', '', 7)],  # Url that works
     '995': [([('u', 'www.google.com/favicon.ico')], '4', ' ', '', 7)],  # url without protocol
     '996': [([('u', 'httpstat.us/301')], '4', ' ', '', 7)],   # redirection without protocol
-    '997': [([('u', 'http://httpstat.us/404')], '4', ' ', '', 7)], # Error 404
-    '998': [([('u', 'http://httpstat.us/500')], '4', ' ', '', 7)], # Error 500
-    '999': [([('u', 'http://httpstat.us/301')], '4', ' ', '', 7)], # Permanent redirect
-    '999': [([('a', '5345435'),('i', '52345235'),('r','4243424'),('s','fsdf.gfdfgsdfg.'),('0','2')], 'C', '5', '', 7), ([('a', 'mplampla')], 'C', '5', '', 8)]
+    '997': [([('u', 'http://httpstat.us/404')], '4', ' ', '', 7)],  # Error 404
+    '998': [([('u', 'http://httpstat.us/500')], '4', ' ', '', 7)],  # Error 500
+    '999': [([('u', 'http://httpstat.us/301')], '4', ' ', '', 7)],  # Permanent redirect
+    '999': [([('a', '5345435'),
+              ('i', '52345235'),
+              ('r', '4243424'),
+              ('s', 'fsdf.gfdfgsdfg.'),
+              ('0', '2')], 'C', '5', '', 7),
+            ([('a', 'mplampla')], 'C', '5', '', 8)]
 }
 
 RULE_MOCK = {
     "name": "test_rule",
     "holdingpen": True
 }
+
 
 class BibCheckPluginsTest(InvenioTestCase):
     """ Bibcheck default plugins test """
@@ -166,13 +176,13 @@ class BibCheckPluginsTest(InvenioTestCase):
         self.assertAmends(dates, {"261__c": "2000-06-14"}, fields=["261__c"])
         self.assertAmends(dates, {"262__c": "2000-06-14"}, fields=["262__c"])
         self.assertAmends(dates, {"263__c": "2000-06-14"}, fields=["263__c"])
-        self.assertFails(dates, fields=["264__c"]) # Date in the far past
-        self.assertFails(dates, fields=["265__c"], allow_future=False) # Date in the future
-        self.assertFails(dates, fields=["100__a"]) # Invalid date
+        self.assertFails(dates, fields=["264__c"])  # Date in the far past
+        self.assertFails(dates, fields=["265__c"], allow_future=False)  # Date in the future
+        self.assertFails(dates, fields=["100__a"])  # Invalid date
 
     def test_code_exists(self):
         """ code_exists plugin test """
-        self.assertOk(code_exists, code_in_fields={'100__': 'a'})        
+        self.assertOk(code_exists, code_in_fields={'100__': 'a'})
         self.assertFails(code_exists, code_in_fields={'100__': 'b'})
 
     def test_texkey(self):
@@ -188,58 +198,114 @@ class BibCheckPluginsTest(InvenioTestCase):
         rec = {}
         record_add_field(rec, '001', controlfield_value='111')
         record_add_field(rec, '001', controlfield_value='111')
-        record_add_field(rec, '002', subfields=[('a','hey')])
-        record_add_field(rec, '002', subfields=[('a','hey')])
+        record_add_field(rec, '002', subfields=[('a', 'hey')])
+        record_add_field(rec, '002', subfields=[('a', 'hey')])
         rec = AmendableRecord(rec)
         rec.set_rule(RULE_MOCK)
         remove_duplicates.check_record(rec)
-        self.assertEqual(len(rec.amendments),3)#removes 2 tags and 1 subfield
+        self.assertEqual(len(rec.amendments), 3)  # removes 2 tags and 1 subfield
 
     def test_journal_names(self):
+        """ journal_names plugin test """
         rec = {}
-        record_add_field(rec, '773', subfields=[('p','JHEP')])
+        record_add_field(rec, '773', subfields=[('p', 'JHEP')])
         record_add_field(rec, '001', controlfield_value='111')
-        record_add_field(rec, '999', ind1='C', ind2='5', subfields=[('s','JHEP,a,b')])
+        record_add_field(rec, '999', ind1='C', ind2='5', subfields=[('s', 'JHEP,a,b')])
         rec = AmendableRecord(rec)
         rec.set_rule(RULE_MOCK)
         journal_names.check_records([rec])
         self.assertEqual(rec.valid, True)
+
+        #773__p JHEP2 journal does not exist
         rec = {}
-        record_add_field(rec, '773', subfields=[('p','JHEP2')])
+        record_add_field(rec, '773', subfields=[('p', 'JHEP2')])
         record_add_field(rec, '001', controlfield_value='111')
-        record_add_field(rec, '999', ind1='C', ind2='5', subfields=[('s','JHEP,a,b')])
-        rec = AmendableRecord(rec)
-        rec.set_rule(RULE_MOCK)
-        journal_names.check_records([rec])
-        self.assertEqual(rec.valid, False)
-        rec = {}
-        record_add_field(rec, '773', subfields=[('p','JHEP')])
-        record_add_field(rec, '001', controlfield_value='111')
-        record_add_field(rec, '999', ind1='C', ind2='5', subfields=[('s','JHEP,a,b,c')])
-        rec = AmendableRecord(rec)
-        rec.set_rule(RULE_MOCK)
-        journal_names.check_records([rec])
-        self.assertEqual(rec.valid, False)
-        rec = {}
-        record_add_field(rec, '773', subfields=[('p','JHEP')])
-        record_add_field(rec, '001', controlfield_value='111')
-        record_add_field(rec, '999', ind1='C', ind2='5', subfields=[('s','JHEP2,a,b')])
-        rec = AmendableRecord(rec)
-        rec.set_rule(RULE_MOCK)
-        journal_names.check_records([rec])
-        self.assertEqual(rec.valid, False)
-        rec = {}
-        
-        record_add_field(rec, '773', subfields=[('p','JHEP,a,b')])
-        record_add_field(rec, '001', controlfield_value='111')
-        record_add_field(rec, '999', ind1='C', ind2='5', subfields=[('s','JHEP,a,b')])
+        record_add_field(rec, '999', ind1='C', ind2='5', subfields=[('s', 'JHEP,a,b')])
         rec = AmendableRecord(rec)
         rec.set_rule(RULE_MOCK)
         journal_names.check_records([rec])
         self.assertEqual(rec.valid, False)
 
+        #999C5s has 3 commas
+        rec = {}
+        record_add_field(rec, '773', subfields=[('p', 'JHEP')])
+        record_add_field(rec, '001', controlfield_value='111')
+        record_add_field(rec, '999', ind1='C', ind2='5', subfields=[('s', 'JHEP,a,b,c')])
+        rec = AmendableRecord(rec)
+        rec.set_rule(RULE_MOCK)
+        journal_names.check_records([rec])
+        self.assertEqual(rec.valid, False)
+
+        #999C5s JHEP2 journal does not exist
+        rec = {}
+        record_add_field(rec, '773', subfields=[('p', 'JHEP')])
+        record_add_field(rec, '001', controlfield_value='111')
+        record_add_field(rec, '999', ind1='C', ind2='5', subfields=[('s', 'JHEP2,a,b')])
+        rec = AmendableRecord(rec)
+        rec.set_rule(RULE_MOCK)
+        journal_names.check_records([rec])
+        self.assertEqual(rec.valid, False)
+
+        #773__p only the journal name must be in this field
+        rec = {}
+        record_add_field(rec, '773', subfields=[('p', 'JHEP,a,b')])
+        record_add_field(rec, '001', controlfield_value='111')
+        record_add_field(rec, '999', ind1='C', ind2='5', subfields=[('s', 'JHEP,a,b')])
+        rec = AmendableRecord(rec)
+        rec.set_rule(RULE_MOCK)
+        journal_names.check_records([rec])
+        self.assertEqual(rec.valid, False)
+
+    def test_recid(self):
+        """ recid plugin test """
+        rec = {}
+        record_add_field(rec, '773', subfields=[('0', '1')])
+        record_add_field(rec, '785', subfields=[('w', '1')])
+        record_add_field(rec, '001', controlfield_value='111')
+        record_add_field(rec, '999', ind1='C', ind2='5', subfields=[('0', '1')])
+        rec = AmendableRecord(rec)
+        rec.set_rule(RULE_MOCK)
+        recid.check_record(rec)
+        self.assertEqual(rec.valid, True)
+
+        #letter in record id
+        rec = {}
+        record_add_field(rec, '773', subfields=[('0', 'a')])
+        record_add_field(rec, '001', controlfield_value='111')
+        rec = AmendableRecord(rec)
+        rec.set_rule(RULE_MOCK)
+        recid.check_record(rec)
+        self.assertEqual(rec.valid, False)
+
+        #8 digits record id
+        rec = {}
+        record_add_field(rec, '999', ind1='C', ind2='5', subfields=[('0', '12345678')])
+        record_add_field(rec, '001', controlfield_value='111')
+        rec = AmendableRecord(rec)
+        rec.set_rule(RULE_MOCK)
+        recid.check_record(rec)
+        self.assertEqual(rec.valid, False)
+
+        #0 digits record id
+        rec = {}
+        record_add_field(rec, '999', ind1='C', ind2='5', subfields=[('0', '')])
+        record_add_field(rec, '001', controlfield_value='111')
+        rec = AmendableRecord(rec)
+        rec.set_rule(RULE_MOCK)
+        recid.check_record(rec)
+        self.assertEqual(rec.valid, False)
+
+        #record does not exist
+        rec = {}
+        record_add_field(rec, '785', subfields=[('w', '9999999')])
+        record_add_field(rec, '001', controlfield_value='111')
+        rec = AmendableRecord(rec)
+        rec.set_rule(RULE_MOCK)
+        recid.check_record(rec)
+        self.assertEqual(rec.valid, False)
+
     # Test skipped by default because it involved making slow http requests
-    #def test_url(self):
+    # def test_url(self):
     #    """ Url checker plugin test. This plugin is disabled by default """
     #    self.assertOk(url, fields=["994%%u"])
     #    self.assertAmends(url, {"9954_u": "http://www.google.com/favicon.ico"}, fields=["995%%u"])
@@ -253,4 +319,3 @@ TEST_SUITE = make_test_suite(BibCheckPluginsTest)
 
 if __name__ == "__main__":
     run_test_suite(TEST_SUITE)
-
