@@ -203,7 +203,7 @@ class BibCheckPluginsTest(InvenioTestCase):
         rec = AmendableRecord(rec)
         rec.set_rule(RULE_MOCK)
         remove_duplicates.check_record(rec)
-        self.assertEqual(len(rec.amendments), 3)  # removes 2 tags and 1 subfield
+        self.assertEqual(len(rec.amendments), 2)
 
     def test_journal_names(self):
         """ journal_names plugin test """

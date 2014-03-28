@@ -18,17 +18,15 @@
 
 from invenio.bibcheck_task import AmendableRecord
 from invenio.bibcheck_plugins import remove_empty_fields
-
+from invenio.bibrecord import record_add_field
 
 def check_record(record):
     """ Bibcheck plugin to remove duplicate fields from records """
-    fields = []
-    for position, value in record.iterfields(['%%%%%_','%%%%%%']):
-        if (position[0], value) not in fields:
-            fields.append((position[0], value))
-        else:
-            message = 'remove duplicate subfield: %s with value: %s ' % (position, value)
-            record.delete_field(position, message)
-            tag = position[0][:3]
-    if record.amended:
-        remove_empty_fields.remove_empty_tags(record)
+    for field in record.keys():
+        for tag in record.itertags(field[:3]):
+            tuples = []
+            for (local_position, field_obj) in enumerate(record[tag]):
+                if field_obj[:-1] not in tuples:
+                    tuples.append(field_obj[:-1])
+                else:
+                    record.delete_field((tag + "%%%", local_position, None))
