@@ -205,57 +205,6 @@ class BibCheckPluginsTest(InvenioTestCase):
         remove_duplicates.check_record(rec)
         self.assertEqual(len(rec.amendments), 2)
 
-    def test_journal_names(self):
-        """ journal_names plugin test """
-        rec = {}
-        record_add_field(rec, '773', subfields=[('p', 'JHEP')])
-        record_add_field(rec, '001', controlfield_value='111')
-        record_add_field(rec, '999', ind1='C', ind2='5', subfields=[('s', 'JHEP,a,b')])
-        rec = AmendableRecord(rec)
-        rec.set_rule(RULE_MOCK)
-        journal_names.check_records([rec])
-        self.assertEqual(rec.valid, True)
-
-        #773__p JHEP2 journal does not exist
-        rec = {}
-        record_add_field(rec, '773', subfields=[('p', 'JHEP2')])
-        record_add_field(rec, '001', controlfield_value='111')
-        record_add_field(rec, '999', ind1='C', ind2='5', subfields=[('s', 'JHEP,a,b')])
-        rec = AmendableRecord(rec)
-        rec.set_rule(RULE_MOCK)
-        journal_names.check_records([rec])
-        self.assertEqual(rec.valid, False)
-
-        #999C5s has 3 commas
-        rec = {}
-        record_add_field(rec, '773', subfields=[('p', 'JHEP')])
-        record_add_field(rec, '001', controlfield_value='111')
-        record_add_field(rec, '999', ind1='C', ind2='5', subfields=[('s', 'JHEP,a,b,c')])
-        rec = AmendableRecord(rec)
-        rec.set_rule(RULE_MOCK)
-        journal_names.check_records([rec])
-        self.assertEqual(rec.valid, False)
-
-        #999C5s JHEP2 journal does not exist
-        rec = {}
-        record_add_field(rec, '773', subfields=[('p', 'JHEP')])
-        record_add_field(rec, '001', controlfield_value='111')
-        record_add_field(rec, '999', ind1='C', ind2='5', subfields=[('s', 'JHEP2,a,b')])
-        rec = AmendableRecord(rec)
-        rec.set_rule(RULE_MOCK)
-        journal_names.check_records([rec])
-        self.assertEqual(rec.valid, False)
-
-        #773__p only the journal name must be in this field
-        rec = {}
-        record_add_field(rec, '773', subfields=[('p', 'JHEP,a,b')])
-        record_add_field(rec, '001', controlfield_value='111')
-        record_add_field(rec, '999', ind1='C', ind2='5', subfields=[('s', 'JHEP,a,b')])
-        rec = AmendableRecord(rec)
-        rec.set_rule(RULE_MOCK)
-        journal_names.check_records([rec])
-        self.assertEqual(rec.valid, False)
-
     def test_recid(self):
         """ recid plugin test """
         rec = {}
