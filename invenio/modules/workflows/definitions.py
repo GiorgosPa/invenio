@@ -73,7 +73,7 @@ class RecordWorkflow(WorkflowBase):
             else:
                 for a_title in record["title"]:
                     extracted_titles.append(record["title"][a_title])
-        return ", ".join(extracted_titles)
+        return ", ".join(extracted_titles) or "No title"
 
     @staticmethod
     def get_description(bwo):

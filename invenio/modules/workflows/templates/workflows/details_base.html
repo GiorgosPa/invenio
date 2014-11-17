@@ -145,6 +145,17 @@
                 </h6>
               </div>
 
+              <div class="row">
+                <div class="col-md-12">
+                  <a href="{{ url_for('holdingpen.restart_record_prev', objectid=bwobject.id)}}"
+                     class="btn btn-warning"
+                     {% if bwobject.version == 1 %}disabled="disabled"{% endif %}>
+                    <span class="glyphicon glyphicon-repeat"></span>
+                    <strong>{{ _('Restart current task') }}</strong>
+                  </a>
+                </div>
+              </div>
+
               <div class="modal fade" id="error_details_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
                 <div class="modal-dialog">
                   <div class="modal-content">
