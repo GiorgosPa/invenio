@@ -52,7 +52,7 @@ def post_process_selected(post_process):
     return _post_process_selected
 
 
-def convert_record_with_repository(stylesheet="oaidc2marcxml.xsl"):
+def convert_record_with_repository(stylesheet=""):
     """Convert a MARC record to another one thanks to the stylesheet.
 
     This function converts a record to a marcxml representation by using a
@@ -70,9 +70,12 @@ def convert_record_with_repository(stylesheet="oaidc2marcxml.xsl"):
     @wraps(convert_record_with_repository)
     def _convert_record(obj, eng):
         from invenio.modules.workflows.tasks.marcxml_tasks import convert_record
-        repository = obj.extra_data.get("repository", {})
-        arguments = repository.get("arguments", {})
-        stylesheet_to_use = arguments.get('c_stylesheet', stylesheet)
+        if not stylesheet:
+            repository = obj.extra_data.get("repository", {})
+            arguments = repository.get("arguments", {})
+            stylesheet_to_use = arguments.get('c_stylesheet')
+        else:
+            stylesheet_to_use = stylesheet
         convert_record(stylesheet_to_use)(obj, eng)
 
     return _convert_record
