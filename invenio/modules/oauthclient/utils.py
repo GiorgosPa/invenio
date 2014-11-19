@@ -19,11 +19,12 @@
 
 """ Utility methods to help find, authenticate or register a remote user. """
 
+from flask import current_app
 from flask.ext.login import logout_user
 from invenio.ext.login import authenticate, UserInfo
 from invenio.ext.sqlalchemy import db
 from invenio.ext.script import generate_secret_key
-from invenio.modules.accounts.models import User
+from invenio.modules.accounts.models import User, UserEXT
 
 from .models import RemoteToken, RemoteAccount
 
@@ -40,10 +41,15 @@ def oauth_get_user(client_id, account_info=None, access_token=None):
         if token:
             return UserInfo(token.remote_account.user_id)
 
-    if account_info and account_info.get('email'):
-        u = User.query.filter_by(email=account_info['email']).first()
-        if u:
-            return UserInfo(u.id)
+    if account_info:
+        if account_info.get('external_id'):
+            u = UserEXT.query.filter_by(id=account_info['external_id']).first()
+            if u:
+                return UserInfo(u.id_user)
+        elif account_info.get('email'):
+            u = User.query.filter_by(email=account_info['email']).first()
+            if u:
+                return UserInfo(u.id)
     return None
 
 
@@ -75,9 +81,16 @@ def oauth_register(account_info):
             )
 
             try:
+                if account_info.get('external_id'):
+                    u.external_identifiers.append(UserEXT(
+                        id=account_info.get('external_id'),
+                        method="oauth2",
+                        id_user=u.id
+                    ))
+
                 db.session.add(u)
                 db.session.commit()
                 return UserInfo(u.id)
             except Exception:
-                pass
+                current_app.logger.exception("Cannot create user")
     return None

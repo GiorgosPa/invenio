@@ -328,6 +328,8 @@ class UserEXT(db.Model):
     id_user = db.Column(db.Integer(15, unsigned=True),
                         db.ForeignKey(User.id), nullable=False)
 
+    user = db.relationship(User, backref="external_identifiers")
+
     __table_args__ = (db.Index('id_user', id_user, method, unique=True),
                       db.Model.__table_args__)
 

@@ -120,7 +120,8 @@ def account_info(remote, resp):
 
     # Store ORCID of the user in session for later retrieval
     session[token_session_key(remote.name) + "_orcid"] = resp.get("orcid")
-    return dict(email=None, nickname=None)
+    return dict(email=None, nickname=None,
+                external_id="orcid:" + resp.get("orcid"))
 
 
 def account_setup(remote, token):

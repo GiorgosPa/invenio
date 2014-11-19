@@ -209,7 +209,8 @@ def authorized_signup_handler(resp, remote, *args, **kwargs):
                 return redirect(url_for(
                     ".signup",
                     remote_app=remote.name,
-                    next=request.args.get('next', '/')
+                    next=request.args.get('next', '/'),
+                    external_id=account_info.get("external_id")
                 ))
 
         # Authenticate user
@@ -275,8 +276,12 @@ def signup_handler(remote, *args, **kwargs):
     form = EmailSignUpForm(request.form)
 
     if form.validate_on_submit():
+        account_info = {}
+        account_info.update(form.data)
+        if request.args.get('external_id'):
+            account_info["external_id"] = request.args.get("external_id")
         # Register user
-        user = oauth_register(form.data)
+        user = oauth_register(account_info)
 
         if user is None:
             raise OAuthError("Could not create user.", remote)
