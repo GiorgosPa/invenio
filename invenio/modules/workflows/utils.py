@@ -180,7 +180,7 @@ def parse_bwids(bwolist):
     return list(ast.literal_eval(bwolist))
 
 
-def get_holdingpen_objects(ptags=[]):
+def get_holdingpen_objects(ptags=["Need action"]):
     """Get BibWorkflowObject's for display in Holding Pen.
 
     Uses DataTable naming for filtering/sorting. Work in progress.

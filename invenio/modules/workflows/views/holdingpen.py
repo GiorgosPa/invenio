@@ -95,7 +95,7 @@ def maintable():
     """Display main table interface of Holdingpen."""
     bwolist = get_holdingpen_objects()
     action_list = get_action_list(bwolist)
-    tags = session.get("holdingpen_tags", list())
+    tags = session.get("holdingpen_tags", ["Need action"])
 
     if 'version' in request.args:
         for key, value in ObjectVersion.MAPPING.items():
@@ -337,7 +337,7 @@ def load_table():
 
     :return: JSON formatted str from dict of DataTables args.
     """
-    tags = session.setdefault("holdingpen_tags", list())
+    tags = session.setdefault("holdingpen_tags", ["Need action"])
     if request.method == "POST":
         if request.json and "tags" in request.json:
             tags = request.json["tags"]
