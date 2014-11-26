@@ -43,7 +43,7 @@ from invenio.ext.principal import permission_required
 from invenio.utils.date import pretty_date
 
 from ..models import BibWorkflowObject, Workflow, ObjectVersion
-from ..registry import actions
+from ..registry import actions, workflows
 from ..utils import (sort_bwolist, extract_data, get_action_list,
                      get_formatted_holdingpen_object,
                      get_holdingpen_objects,
@@ -185,6 +185,7 @@ def details(objectid):
                            workflow_definition=workflow_definition,
                            versions=ObjectVersion,
                            pretty_date=pretty_date,
+                           workflow_class=workflows.get(extracted_data['w_metadata'].name),
                            )
 
 
