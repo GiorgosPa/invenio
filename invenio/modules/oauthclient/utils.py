@@ -25,6 +25,7 @@ from invenio.ext.login import authenticate, UserInfo
 from invenio.ext.sqlalchemy import db
 from invenio.ext.script import generate_secret_key
 from invenio.modules.accounts.models import User, UserEXT
+from invenio.base.globals import cfg
 
 from .models import RemoteToken, RemoteAccount
 
@@ -56,7 +57,10 @@ def oauth_get_user(client_id, account_info=None, access_token=None):
 def oauth_authenticate(client_id, userinfo, require_existing_link=False):
     """ Authenticate an oauth authorized callback. """
     # Authenticate via the access token (access token used to get user_id)
-    if userinfo and authenticate(userinfo['email']):
+    if userinfo and authenticate(
+        userinfo['email'],
+        remember=cfg['OAUTHCLIENT_SESSION_PERMANENT_LOGIN'].get(client_id,
+                                                                   False)):
         if require_existing_link:
             account = RemoteAccount.get(userinfo.get_id(), client_id)
             if account is None:

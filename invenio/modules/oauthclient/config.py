@@ -176,3 +176,6 @@ OAUTHCLIENT_REMOTE_APPS = {}
 
 OAUTHCLIENT_SESSION_KEY_PREFIX = "oauth_token"
 """Session key prefix used when storing the access token for a remote app."""
+
+OAUTHCLIENT_SESSION_PERMANENT_LOGIN = {}
+"""Set session.permanent for users logging in through oauth."""

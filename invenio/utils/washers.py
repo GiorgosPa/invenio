@@ -97,6 +97,9 @@ def wash_urlargd(form, content):
         elif dst_type is list:
             result[k] = [value]
 
+        elif dst_type is bool:
+            result[k] = bool(value)
+
         else:
             raise ValueError(
                 'cannot cast form value %s of type %r into type %r' % (
